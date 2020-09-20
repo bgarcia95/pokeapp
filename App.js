@@ -2,13 +2,11 @@ import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
-  ScrollView,
   View,
   Text,
   StatusBar,
   Button,
   Image,
-  TextInput,
   ActivityIndicator,
 } from 'react-native';
 
@@ -20,7 +18,12 @@ import {
 } from '@react-native-community/google-signin';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import {Provider} from 'react-redux';
+
 import Home from './src/screens/Home';
+import configStore from './src/redux/store/configureStore';
+
+const store = configStore();
 
 const App = () => {
   const [loggedIn, setloggedIn] = useState(false);
@@ -78,15 +81,15 @@ const App = () => {
     return subscriber; // unsubscribe on unmount
   }, []);
 
-  const newReference = database().ref('/usuarios');
-  const handleSubmit = () => {
-    newReference
-      .push({
-        name: 'Gabriela Preza',
-        edad: 15,
-      })
-      .then(() => console.log('Data updated.'));
-  };
+  // const newReference = database().ref('/usuarios');
+  // const handleSubmit = () => {
+  //   newReference
+  //     .push({
+  //       name: 'Gabriela Preza',
+  //       edad: 15,
+  //     })
+  //     .then(() => console.log('Data updated.'));
+  // };
 
   const signOut = async () => {
     try {
@@ -111,7 +114,7 @@ const App = () => {
     );
   }
   return (
-    <>
+    <Provider store={store}>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         {showHome ? (
@@ -182,7 +185,7 @@ const App = () => {
           </View>
         )}
       </SafeAreaView>
-    </>
+    </Provider>
   );
 };
 
