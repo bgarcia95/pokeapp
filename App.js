@@ -1,12 +1,10 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import {StatusBar} from 'react-native';
-
-import {NavigationContainer} from '@react-navigation/native';
+import {Provider} from 'react-redux';
 
 import configStore from './src/redux/store/configureStore';
-import {OrderNavigator} from './src/navigation/AppNavigator';
-import {Provider} from 'react-redux';
+import AppNavigator from './src/navigation/AppNavigator';
 
 const store = configStore();
 
@@ -14,9 +12,7 @@ const App = () => {
   return (
     <Provider store={store}>
       <StatusBar barStyle="light-content" />
-      <NavigationContainer>
-        <OrderNavigator />
-      </NavigationContainer>
+      <AppNavigator />
     </Provider>
   );
 };
