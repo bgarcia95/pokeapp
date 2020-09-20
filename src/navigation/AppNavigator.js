@@ -1,18 +1,18 @@
 import React from 'react';
-import Login from '../screens/Auth/Login';
-import Home from '../screens/Home';
-import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import {useSelector} from 'react-redux';
+import {NavigationContainer} from '@react-navigation/native';
 
-const OrderStackNavigator = createMaterialBottomTabNavigator();
+import {AuthNavigator, MainNavigator} from './PokeAppNavigator';
 
-export const OrderNavigator = () => {
+const AppNavigator = () => {
+  const isAuth = useSelector((state) => !!state.auth.userData);
+
   return (
-    <OrderStackNavigator.Navigator
-      activeColor="#fff"
-      shifting={true}
-      backBehavior="history">
-      <OrderStackNavigator.Screen name="Profile" component={Login} />
-      <OrderStackNavigator.Screen name="Home" component={Home} />
-    </OrderStackNavigator.Navigator>
+    <NavigationContainer>
+      {isAuth && <MainNavigator />}
+      {!isAuth && <AuthNavigator />}
+    </NavigationContainer>
   );
 };
+
+export default AppNavigator;
