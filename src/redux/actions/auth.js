@@ -1,4 +1,4 @@
-import {AUTHENTICATE, DID_TRY_AL, LOGOUT} from '../utils/actions';
+import {AUTHENTICATE, LOGOUT} from '../utils/actions';
 
 export const authenticate = (userData) => {
   return (dispatch) => {
