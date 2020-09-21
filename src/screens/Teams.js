@@ -133,7 +133,7 @@ const Teams = (props) => {
           title="Start"
           onPress={() => {
             toggleModal();
-            props.navigation.navigate('TeamsCreationScreen', {
+            props.navigation.navigate('TeamsManagementScreen', {
               region: region,
             });
             setSelectedRegion(null);
