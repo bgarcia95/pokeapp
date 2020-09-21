@@ -1,69 +1,77 @@
 import React, {useEffect, useState} from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
-import Icon from 'react-native-vector-icons/Feather';
+import {Button, StyleSheet, Text, View, Modal, FlatList} from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {useDispatch, useSelector} from 'react-redux';
-import {fetchRegions} from '../redux/actions/regions';
-import {fetchPokemonsSuccess} from '../redux/actions/pokemons';
+import database from '@react-native-firebase/database';
+import Icon from 'react-native-vector-icons/Entypo';
 
-const PokeCard = ({pokemon}) => {
+import {fetchRegions} from '../redux/actions/regions';
+import {TouchableNativeFeedback} from 'react-native-gesture-handler';
+
+const MyModal = ({openModal, toggleModal, ...props}) => {
   return (
-    <View
-      style={{
-        flex: 1,
-        margin: 10,
-      }}>
+    <Modal
+      visible={openModal}
+      onRequestClose={toggleModal}
+      transparent
+      animationType="fade">
       <View
         style={{
-          height: 100,
-          width: 100,
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.2)',
           justifyContent: 'center',
-          alignItems: 'center',
         }}>
-        {!pokemon.image && pokemon.image !== null ? (
-          <ActivityIndicator color="red" size="small" />
-        ) : (
-          <Image
-            style={{height: '100%', width: '100%'}}
-            source={
-              pokemon.image !== null
-                ? {
-                    uri: pokemon.image,
-                  }
-                : require('../../assets/img/notavailable.jpg')
-            }
-          />
-        )}
+        <View
+          style={{
+            height: '25%',
+            padding: 30,
+            backgroundColor: '#fff',
+            margin: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+          }}>
+          {props.children}
+        </View>
       </View>
-      <Text># {pokemon.id}</Text>
-      <Text style={{fontWeight: 'bold', textTransform: 'capitalize'}}>
-        {pokemon.name}
-      </Text>
-      <Text>{pokemon.description}</Text>
-    </View>
+    </Modal>
   );
 };
 
-const Home = (props) => {
+const Teams = (props) => {
   const dispatch = useDispatch();
 
   const [region, setRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+
+  const toggleModal = () => setOpenModal((prevState) => !prevState);
 
   const regions = useSelector((state) => state.regions.regions);
-  const pokemons = useSelector((state) => state.pokemons.pokemons);
-  const loading = useSelector((state) => state.pokemons.isLoading);
+
+  const [teams, setTeams] = useState([]);
+
+  const loggedUser = useSelector((state) => state.auth.userData.email);
 
   useEffect(() => {
     const getRegions = () => dispatch(fetchRegions());
     getRegions();
+
+    database()
+      .ref('/teams')
+      .on('value', (snapshot) => {
+        setTeams(
+          Object.keys(snapshot.val())
+            .map((el) =>
+              snapshot.val()[el].user === loggedUser
+                ? {
+                    id: el,
+                    ...snapshot.val()[el],
+                  }
+                : null,
+            )
+            .filter((val) => val),
+        );
+      });
   }, []);
 
   useEffect(() => {
@@ -81,66 +89,142 @@ const Home = (props) => {
     }
   }, [selectedRegion]);
 
-  useEffect(() => {
-    if (region !== null) {
-      const getPokemons = () => dispatch(fetchPokemonsSuccess(region));
-      getPokemons();
-    }
-  }, [region, dispatch]);
-
   const regionsDDData = regions?.map((region) => ({
     label: region.name.toUpperCase(),
     value: region.name,
-    icon: () => <Icon name="map" size={18} color="#900" />,
   }));
 
   return (
     <View style={styles.screen}>
-      <Text>Home Screen!</Text>
+      <MyModal openModal={openModal} toggleModal={toggleModal}>
+        <Text>Pick a Region:</Text>
 
-      <DropDownPicker
-        items={regionsDDData}
-        defaultValue={selectedRegion}
-        placeholder="Select a region"
-        containerStyle={{
-          height: 40,
-          width: 150,
-          marginVertical: 20,
-        }}
-        style={{backgroundColor: '#fafafa', zIndex: 5}}
-        itemStyle={{
-          justifyContent: 'flex-start',
-        }}
-        dropDownStyle={{
-          backgroundColor: '#fafafa',
-          zIndex: 5,
-        }}
-        onChangeItem={(item) => setSelectedRegion(item.value)}
-        disabled={loading}
-      />
-
-      {loading ? (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-          <ActivityIndicator color="blue" size="large" />
-        </View>
-      ) : pokemons?.length === 0 ? (
-        <View style={styles.screen}>
-          <Text>Start your journey!</Text>
-        </View>
-      ) : (
-        <FlatList
+        <View
           style={{
-            width: '90%',
-            height: 250,
-            marginTop: 200,
+            borderRadius: 10,
+            borderColor: '#ccc',
+            borderWidth: 1,
+            height: 50,
+            width: '50%',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 10,
+            marginVertical: 15,
+          }}>
+          <Picker
+            selectedValue={selectedRegion}
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+            onValueChange={(itemValue) => setSelectedRegion(itemValue)}
+            mode="dropdown">
+            <Picker.Item label="NONE" value={null} />
+            {regionsDDData.map((item) => (
+              <Picker.Item
+                key={item.value}
+                label={item.label}
+                value={item.value}
+              />
+            ))}
+          </Picker>
+        </View>
+        <Button
+          title="Start"
+          onPress={() => {
+            toggleModal();
+            props.navigation.navigate('TeamsCreationScreen', {
+              region: region,
+            });
+            setSelectedRegion(null);
           }}
-          numColumns={2}
-          contentContainerStyle={{paddingVertical: 10}}
-          data={pokemons}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({item}) => <PokeCard pokemon={item} />}
+          disabled={selectedRegion === null}
         />
-      )}
+      </MyModal>
+
+      <View style={{width: '100%', flex: 1, marginVertical: 10}}>
+        {teams.length !== 0 ? (
+          <View style={{flex: 1}}>
+            <View
+              style={{
+                height: '10%',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text>Keep adding new teams!</Text>
+            </View>
+
+            <View
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <View style={{width: '50%'}}>
+                <Button title="Add Team" onPress={() => toggleModal()} />
+              </View>
+            </View>
+
+            <View style={{paddingHorizontal: 10, marginVertical: 10}}>
+              <Text>My Teams</Text>
+            </View>
+
+            <FlatList
+              style={{width: '100%' /*  backgroundColor: 'red' */}}
+              data={teams.length > 0 && teams}
+              renderItem={({item}) => (
+                <View
+                  style={{
+                    margin: 10,
+                    overflow: 'hidden',
+                    borderRadius: 10,
+                    elevation: 5,
+                  }}>
+                  <TouchableNativeFeedback
+                    style={{borderRadius: 10}}
+                    useForeground
+                    onPress={() =>
+                      props.navigation.navigate('ViewTeam', {
+                        team: item,
+                      })
+                    }>
+                    <View
+                      style={{
+                        backgroundColor: '#fff',
+                        padding: 10,
+                        borderRadius: 10,
+                      }}>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}>
+                        <View>
+                          <Text>{item.teamName}</Text>
+                          <Text style={{textTransform: 'capitalize'}}>
+                            {item.region}
+                          </Text>
+                        </View>
+
+                        <Icon name="chevron-right" size={24} color="#000" />
+                      </View>
+                    </View>
+                  </TouchableNativeFeedback>
+                </View>
+              )}
+            />
+          </View>
+        ) : (
+          <View
+            style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+            <Text>No teams added yet. Start adding some!</Text>
+            <View style={{width: 150, justifyContent: 'center'}}>
+              <Button title="Add Team" onPress={() => toggleModal()} />
+            </View>
+          </View>
+        )}
+      </View>
     </View>
   );
 };
@@ -153,4 +237,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Home;
+export default Teams;
