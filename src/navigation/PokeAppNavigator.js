@@ -1,6 +1,6 @@
 import React from 'react';
 import Login from '../screens/Auth/Login';
-import Home from '../screens/Home';
+import Teams from '../screens/Teams';
 import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
 import Profile from '../screens/Profile';
@@ -14,7 +14,7 @@ export const MainNavigator = () => {
       shifting={true}
       backBehavior="history">
       <MainStackNavigator.Screen name="Profile" component={Profile} />
-      <MainStackNavigator.Screen name="Home" component={Home} />
+      <MainStackNavigator.Screen name="Teams" component={Teams} />
     </MainStackNavigator.Navigator>
   );
 };
