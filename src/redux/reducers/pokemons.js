@@ -16,6 +16,7 @@ export default (state = initialState, action) => {
     case FETCH_POKEMONS:
       return {
         pokemons: action.pokemons,
+        isLoading: false,
       };
     case FETCH_POKEMONS_FINISH:
       return {...state, isLoading: false};
