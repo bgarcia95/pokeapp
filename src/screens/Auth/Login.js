@@ -39,16 +39,6 @@ const Login = (props) => {
     }
   };
 
-  // const newReference = database().ref('/usuarios');
-  // const handleSubmit = () => {
-  //   newReference
-  //     .push({
-  //       name: 'Gabriela Preza',
-  //       edad: 15,
-  //     })
-  //     .then(() => console.log('Data updated.'));
-  // };
-
   const onAuthStateChanged = (user) => {
     if (user) {
       console.log('true');
