@@ -105,7 +105,7 @@ const TeamsManagement = (props) => {
       ) : (
         <View style={styles.mainContainer}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Enter team's name:</Text>
+            <Text style={styles.label}>Enter team name:</Text>
             <TextInput
               mode="outlined"
               placeholder="E.g: 'OP Team'"
