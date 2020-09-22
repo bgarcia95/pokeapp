@@ -1,5 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import {Button, StyleSheet, Text, View, Modal, FlatList} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Modal,
+  FlatList,
+  ActivityIndicator,
+  Dimensions,
+} from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {useDispatch, useSelector} from 'react-redux';
 import database from '@react-native-firebase/database';
@@ -7,8 +15,11 @@ import Icon from 'react-native-vector-icons/Entypo';
 
 import {fetchRegions} from '../redux/actions/regions';
 import {TouchableNativeFeedback} from 'react-native-gesture-handler';
+import {Button} from 'react-native-paper';
 
 const MyModal = ({openModal, toggleModal, ...props}) => {
+  const {width, height} = Dimensions.get('window');
+
   return (
     <Modal
       visible={openModal}
@@ -23,7 +34,7 @@ const MyModal = ({openModal, toggleModal, ...props}) => {
         }}>
         <View
           style={{
-            height: '25%',
+            height: height <= 592 ? '35%' : '25%',
             padding: 30,
             backgroundColor: '#fff',
             margin: 20,
@@ -52,26 +63,39 @@ const Teams = (props) => {
 
   const loggedUser = useSelector((state) => state.auth.userData.email);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const getRegions = () => dispatch(fetchRegions());
     getRegions();
 
-    database()
-      .ref('/teams')
-      .on('value', (snapshot) => {
-        setTeams(
-          Object.keys(snapshot.val())
-            .map((el) =>
-              snapshot.val()[el].user === loggedUser
-                ? {
-                    id: el,
-                    ...snapshot.val()[el],
-                  }
-                : null,
-            )
-            .filter((val) => val),
-        );
-      });
+    setIsLoading(true);
+    const loadTeams = () => {
+      database()
+        .ref('/teams')
+        .on('value', (snapshot) => {
+          setTeams(
+            Object.keys(snapshot.val())
+              .map((el) =>
+                snapshot.val()[el].user === loggedUser
+                  ? {
+                      id: el,
+                      ...snapshot.val()[el],
+                    }
+                  : null,
+              )
+              .filter((val) => val)
+              .sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime(),
+              ),
+          );
+          setIsLoading(false);
+        });
+    };
+
+    loadTeams();
   }, []);
 
   useEffect(() => {
@@ -97,20 +121,9 @@ const Teams = (props) => {
   return (
     <View style={styles.screen}>
       <MyModal openModal={openModal} toggleModal={toggleModal}>
-        <Text>Pick a Region:</Text>
+        <Text style={styles.modalText}>Pick a Region:</Text>
 
-        <View
-          style={{
-            borderRadius: 10,
-            borderColor: '#ccc',
-            borderWidth: 1,
-            height: 50,
-            width: '50%',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingHorizontal: 10,
-            marginVertical: 15,
-          }}>
+        <View style={styles.pickerContainer}>
           <Picker
             selectedValue={selectedRegion}
             style={{
@@ -118,7 +131,7 @@ const Teams = (props) => {
               height: '100%',
             }}
             onValueChange={(itemValue) => setSelectedRegion(itemValue)}
-            mode="dropdown">
+            mode="dialog">
             <Picker.Item label="NONE" value={null} />
             {regionsDDData.map((item) => (
               <Picker.Item
@@ -129,100 +142,92 @@ const Teams = (props) => {
             ))}
           </Picker>
         </View>
-        <Button
-          title="Start"
-          onPress={() => {
-            toggleModal();
-            props.navigation.navigate('TeamsManagementScreen', {
-              region: region,
-            });
-            setSelectedRegion(null);
-          }}
-          disabled={selectedRegion === null}
-        />
+        <View style={styles.startButton}>
+          <Button
+            contentStyle={{width: '100%', height: '100%'}}
+            onPress={() => {
+              toggleModal();
+              props.navigation.navigate('TeamsManagementScreen', {
+                region: region,
+              });
+              setSelectedRegion(null);
+            }}
+            disabled={selectedRegion === null}
+            mode="contained"
+            color="#CF823E"
+            labelStyle={{color: '#fff'}}>
+            Start
+          </Button>
+        </View>
       </MyModal>
 
-      <View style={{width: '100%', flex: 1, marginVertical: 10}}>
-        {teams.length !== 0 ? (
-          <View style={{flex: 1}}>
-            <View
-              style={{
-                height: '10%',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <Text>Keep adding new teams!</Text>
+      <View style={styles.mainScreen}>
+        {isLoading && (
+          <View style={styles.screen}>
+            <ActivityIndicator size="large" color="red" />
+          </View>
+        )}
+        {teams.length !== 0 && !isLoading ? (
+          <View style={{height: '100%', width: '100%', alignItems: 'center'}}>
+            <View style={styles.myTeamsLabelWrapper}>
+              <Text style={styles.myTeamsLabel}>My Teams</Text>
             </View>
 
-            <View
-              style={{
-                width: '100%',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <View style={{width: '50%'}}>
-                <Button title="Add Team" onPress={() => toggleModal()} />
-              </View>
-            </View>
-
-            <View style={{paddingHorizontal: 10, marginVertical: 10}}>
-              <Text>My Teams</Text>
-            </View>
-
-            <FlatList
-              style={{width: '100%' /*  backgroundColor: 'red' */}}
-              data={teams.length > 0 && teams}
-              renderItem={({item}) => (
-                <View
-                  style={{
-                    margin: 10,
-                    overflow: 'hidden',
-                    borderRadius: 10,
-                    elevation: 5,
-                  }}>
-                  <TouchableNativeFeedback
-                    style={{borderRadius: 10}}
-                    useForeground
-                    onPress={() =>
-                      props.navigation.navigate('ViewTeam', {
-                        team: item,
-                      })
-                    }>
-                    <View
-                      style={{
-                        backgroundColor: '#fff',
-                        padding: 10,
-                        borderRadius: 10,
-                      }}>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}>
+            <View style={styles.listContainer}>
+              <FlatList
+                data={teams.length > 0 && teams}
+                renderItem={({item}) => (
+                  <View style={styles.itemContainer}>
+                    <TouchableNativeFeedback
+                      style={{borderRadius: 10}}
+                      useForeground
+                      onPress={() =>
+                        props.navigation.navigate('ViewTeam', {
+                          team: item,
+                        })
+                      }>
+                      <View style={styles.itemContent}>
                         <View>
-                          <Text>{item.teamName}</Text>
-                          <Text style={{textTransform: 'capitalize'}}>
-                            {item.region}
-                          </Text>
+                          <Text styles={styles.teamName}>{item.teamName}</Text>
+                          <Text style={styles.region}>{item.region}</Text>
                         </View>
-
                         <Icon name="chevron-right" size={24} color="#000" />
                       </View>
-                    </View>
-                  </TouchableNativeFeedback>
-                </View>
-              )}
-            />
-          </View>
-        ) : (
-          <View
-            style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-            <Text>No teams added yet. Start adding some!</Text>
-            <View style={{width: 150, justifyContent: 'center'}}>
-              <Button title="Add Team" onPress={() => toggleModal()} />
+                    </TouchableNativeFeedback>
+                  </View>
+                )}
+              />
+            </View>
+            <View style={styles.buttonContainer}>
+              <Button
+                onPress={() => toggleModal()}
+                mode="contained"
+                color="#27B7ED"
+                labelStyle={styles.buttonLabelStyle}
+                contentStyle={{width: '100%', height: '100%'}}>
+                Add New Team
+              </Button>
             </View>
           </View>
+        ) : (
+          teams.length === 0 &&
+          !isLoading && (
+            <View style={styles.screen}>
+              <Text style={styles.noTeams}>
+                No teams added yet. Start adding some!
+              </Text>
+              <View style={styles.buttonContainer}>
+                <Button
+                  onPress={() => toggleModal()}
+                  mode="contained"
+                  color="#27B7ED"
+                  labelStyle={styles.buttonLabelStyle}
+                  contentStyle={{width: '100%', height: '100%'}}>
+                  Add New Team
+                </Button>
+              </View>
+            </View>
+          )
         )}
       </View>
     </View>
@@ -234,6 +239,81 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  mainScreen: {width: '100%', flex: 1, marginVertical: 10},
+  pickerContainer: {
+    borderRadius: 10,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    height: 50,
+    width: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 15,
+  },
+  modalText: {fontFamily: 'OpenSans-Regular', fontSize: 18},
+  startButton: {width: '50%', height: 40},
+  messageWrapper: {
+    height: '10%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  message: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    width: '50%',
+    height: 50,
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  buttonLabelStyle: {
+    color: '#fff',
+    fontFamily: 'OpenSans-Regular',
+    fontWeight: 'bold',
+  },
+  myTeamsLabelWrapper: {
+    paddingLeft: 15,
+    marginVertical: 20,
+    width: '100%',
+    alignItems: 'flex-start',
+  },
+  myTeamsLabel: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  listContainer: {height: '80%', width: '100%'},
+  itemContainer: {
+    margin: 10,
+    overflow: 'hidden',
+    borderRadius: 10,
+    elevation: 5,
+  },
+  itemContent: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 10,
+
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  teamName: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 24,
+  },
+  region: {
+    color: 'gray',
+    textTransform: 'capitalize',
+  },
+  noTeams: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 18,
+    marginVertical: 10,
   },
 });
 
