@@ -57,8 +57,6 @@ const TeamsManagement = (props) => {
       region: region.name,
     };
 
-    console.log('Payload', payload);
-
     if (isEditing) {
       Alert.alert('Warning', 'Do you want to continue saving these changes?', [
         {text: 'NO', style: 'cancel'},
@@ -72,7 +70,6 @@ const TeamsManagement = (props) => {
                 teamName: teamName,
               })
               .then(() => {
-                console.log('Data updated.');
                 setTeamName('');
                 setSelectedValues([]);
                 props.navigation.push('Home', {screen: 'TeamsScreen'});
@@ -88,11 +85,12 @@ const TeamsManagement = (props) => {
             newReference
               .push({...payload, createdAt: new Date().toISOString()})
               .then(() => {
-                console.log('Data updated.');
                 setTeamName('');
                 setSelectedValues([]);
-                props.navigation.push('Home', {screen: 'TeamsScreen'});
-              }),
+              })
+              .finally(() =>
+                props.navigation.push('Home', {screen: 'TeamsScreen'}),
+              ),
         },
       ]);
     }

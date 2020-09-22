@@ -36,10 +36,8 @@ const Login = (props) => {
 
   const onAuthStateChanged = (user) => {
     if (user) {
-      console.log('true');
       dispatch(authenticate(user));
     } else {
-      console.log('false');
       dispatch(logout());
     }
   };
