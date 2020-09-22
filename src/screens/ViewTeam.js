@@ -78,7 +78,7 @@ const ViewTeam = (props) => {
                       await database()
                         .ref(`/teams/${team.id}`)
                         .remove()
-                        .then(() =>
+                        .finally(() =>
                           props.navigation.push('Home', {
                             screen: 'TeamsScreen',
                           }),
