@@ -54,7 +54,7 @@ const Profile = (props) => {
       <View style={styles.screen}>
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeText}>
-            Welcome <Text style={styles.userName}>{user.displayName} !</Text>
+            Welcome <Text style={styles.userName}>{user.displayName} </Text>!
           </Text>
         </View>
         <View style={styles.userPictureWrapper}>
