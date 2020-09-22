@@ -30,7 +30,7 @@ Desarrollo de aplicación móvil para prueba técnica Elanin.
 
 ## Vista Previa
 
-![gif preview](https://res.cloudinary.com/bgarcia95/image/upload/v1600754782/pokeapp-demo_vfvuzy.gif)
+![gif preview](https://res.cloudinary.com/bgarcia95/image/upload/v1600755604/pokeapp-demo2_rhxs1q.gif)
 
 ## Tecnologías Principales Utilizadas
 
@@ -45,6 +45,10 @@ Desarrollo de aplicación móvil para prueba técnica Elanin.
 - [React Navigation v5](https://reactnavigation.org/docs/getting-started)
 
 > React Navigation se compone de algunas utilidades principales y los navegadores las utilizan para crear la estructura de navegación en su aplicación.
+
+- [Firebase](https://firebase.google.com/?gclid=Cj0KCQjwnqH7BRDdARIsACTSAds1RMoEF-WMIx0yjfwstoBhk9M9JBI2cjivT9fJW6fDLcukvg_zTNkaAncgEALw_wcB)
+
+> Firebase brinda funciones como análisis, bases de datos, mensajería, informes de fallas, etc.
 
 ## Corriendo el proyecto
 
@@ -62,11 +66,19 @@ npm install
 
 En caso de ser necesario seguir las lineas de configuración para desarrollo en React Native haciendo clic en este enlace: [https://reactnative.dev/docs/environment-setup](https://reactnative.dev/docs/environment-setup)
 
-### Pasos Para Android
+### Correr en dispositivo Android (PC)
 
 - Cargar un dispositivo virtual de Android [(a través de _Android Studio_ por ejemplo)](https://developer.android.com/studio/run/managing-avds.html#viewing)
 
 - Luego, escribir la siguiente línea de código dentro de la carpeta principal de nuestro proyecto:
+
+```
+react-native run-android
+```
+
+### Correr en dispositivo fisico Android
+
+- Asegurate de habilitar la depuración USB en tu dispositivo. Conéctalo a tu PC y luego corre la siguiente línea dentro de la carpeta principal del proyecto:
 
 ```
 react-native run-android
