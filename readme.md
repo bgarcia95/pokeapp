@@ -30,7 +30,8 @@ Desarrollo de aplicación móvil para prueba técnica Elanin.
 
 ## Vista Previa
 
-![Previa Gif](demo/pokeapp-demo.gif)
+<!-- ![Previa Gif](demo/pokeapp-demo.gif) -->
+<img src="demo/pokeapp-demo.gif" width="325" height="600" />
 
 ## Tecnologías Principales Utilizadas
 
