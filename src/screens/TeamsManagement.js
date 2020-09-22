@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
+  Alert,
 } from 'react-native';
 import {Button, TextInput} from 'react-native-paper';
 import {useDispatch, useSelector} from 'react-redux';
@@ -12,6 +13,7 @@ import database from '@react-native-firebase/database';
 
 import PokeCard from '../components/PokeCard';
 import {fetchPokemonsSuccess} from '../redux/actions/pokemons';
+import Colors from '../constants/Colors';
 
 const TeamsManagement = (props) => {
   const region = props.route.params?.region;
@@ -19,6 +21,14 @@ const TeamsManagement = (props) => {
 
   const pokemons = useSelector((state) => state.pokemons.pokemons);
   const loading = useSelector((state) => state.pokemons.isLoading);
+
+  const {navigation} = props;
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: 'Manage your team',
+    });
+  }, [navigation]);
 
   useEffect(() => {
     const getPokemons = () => dispatch(fetchPokemonsSuccess(region));
@@ -50,57 +60,66 @@ const TeamsManagement = (props) => {
     console.log('Payload', payload);
 
     if (isEditing) {
-      database()
-        .ref(`/teams/${teamId}`)
-        .update({
-          pokemons: selectedValues,
-          teamName: teamName,
-        })
-        .then(() => console.log('Data updated.'));
+      Alert.alert('Warning', 'Do you want to continue saving these changes?', [
+        {text: 'NO', style: 'cancel'},
+        {
+          text: 'YES',
+          onPress: () =>
+            database()
+              .ref(`/teams/${teamId}`)
+              .update({
+                pokemons: selectedValues,
+                teamName: teamName,
+              })
+              .then(() => {
+                console.log('Data updated.');
+                setTeamName('');
+                setSelectedValues([]);
+                props.navigation.push('Home', {screen: 'TeamsScreen'});
+              }),
+        },
+      ]);
     } else {
-      newReference.push(payload).then(() => console.log('Data updated.'));
+      Alert.alert('Warning', 'Do you want to continue saving this team?', [
+        {text: 'NO', style: 'cancel'},
+        {
+          text: 'YES',
+          onPress: () =>
+            newReference
+              .push({...payload, createdAt: new Date().toISOString()})
+              .then(() => {
+                console.log('Data updated.');
+                setTeamName('');
+                setSelectedValues([]);
+                props.navigation.push('Home', {screen: 'TeamsScreen'});
+              }),
+        },
+      ]);
     }
-
-    setTeamName('');
-    setSelectedValues([]);
-    props.navigation.push('TeamsScreen');
   };
 
   return (
     <View style={styles.screen}>
       {loading ? (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-          <ActivityIndicator color="blue" size="large" />
+        <View style={styles.screen}>
+          <ActivityIndicator color={Colors.primary} size="large" />
         </View>
       ) : (
-        <View style={{width: '100%', height: '100%', alignItems: 'center'}}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginVertical: 10,
-              width: '90%',
-              height: '12%',
-            }}>
-            <Text>Enter team name:</Text>
+        <View style={styles.mainContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Enter team's name:</Text>
             <TextInput
               mode="outlined"
               placeholder="E.g: 'OP Team'"
-              style={{width: 250, marginLeft: 15}}
+              style={styles.textInput}
               value={teamName}
               onChangeText={(text) => setTeamName(text)}
               autoCapitalize="words"
             />
           </View>
-          <View
-            style={{
-              width: '90%',
-              marginTop: 10,
-              height: '75%',
-            }}>
+          <View style={styles.listContainer}>
             <FlatList
               numColumns={2}
-              contentContainerStyle={{paddingVertical: 20}}
               data={pokemons}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({item}) => (
@@ -112,11 +131,14 @@ const TeamsManagement = (props) => {
               )}
             />
           </View>
-          <View style={{height: '10%', width: '100%'}}>
+          <View style={styles.buttonContainer}>
             <Button
               onPress={handleSubmit}
               mode="contained"
-              contentStyle={{width: '100%', height: '100%'}}
+              contentStyle={{width: '100%', height: '100%', borderRadius: 0}}
+              style={{borderRadius: 0}}
+              color={Colors.accent}
+              labelStyle={{color: '#fff'}}
               disabled={selectedValues.length < 3 || !teamName}>
               Save
             </Button>
@@ -133,5 +155,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  mainContainer: {width: '100%', height: '100%', alignItems: 'center'},
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    width: '100%',
+    height: '10%',
+  },
+  label: {fontFamily: 'OpenSans-Regular', fontSize: 16, fontWeight: 'bold'},
+  textInput: {
+    width: '50%',
+    marginLeft: 15,
+    height: 40,
+    backgroundColor: '#fff',
+  },
+  listContainer: {
+    width: '90%',
+    height: '75%',
+    marginVertical: 10,
+  },
+  buttonContainer: {height: '10%', width: '100%'},
 });
 export default TeamsManagement;
