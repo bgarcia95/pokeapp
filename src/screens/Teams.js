@@ -74,23 +74,30 @@ const Teams = (props) => {
       database()
         .ref('/teams')
         .on('value', (snapshot) => {
-          setTeams(
-            Object.keys(snapshot.val())
-              .map((el) =>
-                snapshot.val()[el].user === loggedUser
-                  ? {
-                      id: el,
-                      ...snapshot.val()[el],
-                    }
-                  : null,
-              )
-              .filter((val) => val)
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
-              ),
-          );
+          if (!snapshot.val()) {
+            setTeams([]);
+            setIsLoading(false);
+            return;
+          } else {
+            setTeams(
+              Object.keys(snapshot.val())
+                .map((el) =>
+                  snapshot.val()[el].user === loggedUser
+                    ? {
+                        id: el,
+                        ...snapshot.val()[el],
+                      }
+                    : null,
+                )
+                .filter((val) => val)
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                ),
+            );
+          }
+
           setIsLoading(false);
         });
     };
