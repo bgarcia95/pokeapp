@@ -13,55 +13,55 @@ export const fetchPokemonsFinish = () => ({
 });
 
 export const fetchPokemonsSuccess = (region) => {
-  return (dispatch) => {
+  return async (dispatch) => {
     let tempArr = [];
 
     dispatch(fetchPokemonsStart());
 
-    fetch(`${region['main_generation']?.url}`)
-      .then((res) => {
-        return res.json();
-      })
-      .then((resp) => {
-        resp['pokemon_species']?.map((entry) => {
-          fetch(entry?.url)
-            .then((res) => {
-              return res.json();
-            })
-            .then((resp) => {
-              tempArr.push({
-                description: resp['flavor_text_entries']?.find(
-                  (entry) => entry.language.name === 'en',
-                )['flavor_text'],
-                id: resp.id,
-                name: resp.name,
-              });
-              return resp;
-            })
-            .then((resp) => {
-              fetch(`https://pokeapi.co/api/v2/pokemon/${resp.id}/`)
-                .then((response) => response.json())
-                .then((resp) => {
-                  tempArr = tempArr
-                    .map((pokemon) =>
-                      pokemon.id === resp.id
-                        ? {
-                            ...pokemon,
-                            image: resp.sprites['front_default'],
-                            types: resp.types,
-                          }
-                        : pokemon,
-                    )
-                    .sort((a, b) => (a.id > b.id ? 1 : -1));
+    const mainGeneration = await fetch(`${region['main_generation']?.url}`);
+    const mainGenerationResData = await mainGeneration.json();
 
-                  dispatch({
-                    type: FETCH_POKEMONS,
-                    pokemons: tempArr,
-                  });
-                  dispatch(fetchPokemonsFinish());
-                });
-            });
-        });
-      });
+    const pokemonSpecie = await Promise.all(
+      mainGenerationResData['pokemon_species']?.map(async (entry) => {
+        const pokemonSpecie = await fetch(entry?.url);
+        const pokemonSpecieResData = await pokemonSpecie.json();
+
+        return {
+          description: pokemonSpecieResData['flavor_text_entries']?.find(
+            (entry) => entry.language.name === 'en',
+          )['flavor_text'],
+          id: pokemonSpecieResData.id,
+          name: pokemonSpecieResData.name,
+        };
+      }),
+    );
+
+    tempArr = pokemonSpecie;
+
+    const finalPokemonData = await Promise.all(
+      tempArr.map(async (pokemon) => {
+        const pokemonData = await fetch(
+          `https://pokeapi.co/api/v2/pokemon/${pokemon.id}/`,
+        );
+        const pokemonResData = await pokemonData.json();
+
+        return pokemon.id === pokemonResData.id
+          ? {
+              ...pokemon,
+              image: pokemonResData.sprites['front_default'],
+              types: pokemonResData.types,
+            }
+          : pokemon;
+      }),
+    );
+
+    // console.log(finalPokemonData);
+
+    dispatch({
+      type: FETCH_POKEMONS,
+      pokemons: finalPokemonData.sort((a, b) => (a.id > b.id ? 1 : -1)),
+    });
+
+    dispatch(fetchPokemonsFinish());
   };
 };
